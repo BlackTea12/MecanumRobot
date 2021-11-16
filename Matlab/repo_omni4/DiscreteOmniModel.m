@@ -130,32 +130,55 @@ lamda2 = 8;
 lamda3 = 8;
 lamda = [lamda1 0 0; 0 lamda2 0; 0 0 lamda3];
 N = diag([8*d;8*d;4*d/0.3]);
-dt = 0.01;
+dt = 0.005;
 
+% initialize
 cur_state.state = [0;0;0];
 cur_state.statedot = [0;0;0];
 cur_state.state2dot = [0;0;0];
 
-des_state.state = [0;5;0];
+des_state.state = [8;5;0];
 des_state.statedot = [0;0;0];
 des_state.prestatedot = [0;0;0];
 
 err.state = [0;0;0];
 err.prestate = [0;0;0];
 
+slope = 5;
+radius = 5;
+
+% data storage
+result.time = 0;
+result.state = [0;0;0];
+result.statedot = [0;0;0];
+result.stateddot = [0;0;0];
+result.wheeldeg = [0;0;0;0];
+result.wheelvel = [0;0;0;0];
+result.svar = [0;0;0];
+
 figure(1); hold on; grid on;
-% xlim([-0.5 10]); ylim([-160 160]);
-xlim([-10 10]); ylim([-10 10]);
-for i=0:dt:10
-    %des_state.state = [dt*i;dt*i;deg2rad(45)];
-    error = - cur_state.state + des_state.state;
+% xlim([-0.5 10]); ylim([-160 160]);  % control input u limit
+% xlim([-10 10]); ylim([-10 10]); % trajectory limit
+
+cnt = 2;
+for i=dt:dt:10
+    % ramp input,
+%     des_state.state = [i;slope*i;deg2rad(45)];
+%     des_state.statedot = [1;slope;0];
+
+    % circle input
+    des_state.state = [radius*cos(i); radius*sin(i);0];
+    des_state.statedot = [-radius*sin(i); radius*cos(i);0];
+    
+    % error calculation
+    err.state = - cur_state.state + des_state.state;
     errdot = (err.state - err.prestate)/dt;
     
+    % state ddot calculation
     Qr2dot = (des_state.statedot - des_state.prestatedot)/dt;
     
-    s = errdot + lamda*error;
-
-    
+    % conventional sliding mode variable calculation
+    s = errdot + lamda*err.state;    
     hpsi_inv_mat = hpsi_inv(cur_state.state(3));   
 
     % final control input
@@ -165,26 +188,65 @@ for i=0:dt:10
     hpsi_mat = h_psi(cur_state.state(3));
     cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
     
+    % wheel velocity calculation
+    wheelVel= getwheelvel(cur_state.state(3), cur_state.statedot);
+    
+    % store data
+    result.time(cnt) = i;
+    result.state(:,cnt) = cur_state.state;
+    result.statedot(:,cnt) = cur_state.statedot;
+    result.stateddot(:,cnt) = cur_state.state2dot;
+    result.wheeldeg(:,cnt) = result.wheeldeg(:,cnt-1)+wheelVel*dt;
+    result.wheelvel(:,cnt) = wheelVel;
+    result.svar(:,cnt-1) = s;
+    cnt = cnt+1;
+    
     % data saving
     cur_state.statedot = cur_state.statedot + dt*cur_state.state2dot;
     cur_state.state = cur_state.state + dt*cur_state.statedot;
+
+    % pre data saving
+    des_state.prestatedot = des_state.statedot;
+    err.prestate = err.state;
     
     % draw now
     % trajectory
-    p_tr = plot(cur_state.state(1),cur_state.state(2),'ro');
-    txt = text(9,9,string(i));
+    p_tr = plot(cur_state.state(1),cur_state.state(2),'r.');
+    txt = text(1,1,string(i));
     drawnow;
     delete(txt); 
-    delete(p_tr);   
+    %delete(p_tr);   
     
-    % ctr input
-%     plot(i, u_r(1),'ro');%,i, ctr_in(2),'o',i, ctr_in(3),'o',i, ctr_in(4),'o');
+    % error
+%     plot(i, err.state(1),'r.');%,i, ctr_in(2),'o',i, ctr_in(3),'o',i, ctr_in(4),'o');
 %     txt = text(1,1,string(i));
 %     drawnow;
-%     %delete(p_ctr); 
+%     delete(txt);
+
+    % ctr input
+%     plot(i, ctr_in(1),'r.');%,i, ctr_in(2),'o',i, ctr_in(3),'o',i, ctr_in(4),'o');
+%     txt = text(1,1,string(i));
+%     drawnow;
+%     delete(txt);
+    
+    % wheel velocity
+%     plot(i, rad2deg(wheelVel(2)),'r.');%,i, ctr_in(2),'o',i, ctr_in(3),'o',i, ctr_in(4),'o');
+%     txt = text(1,1,string(i));
+%     drawnow;
 %     delete(txt);
 end
 
+%% result plot
+figure(2);
+plot(result.time, result.stateddot(1,:),'LineWidth',1.5); grid on; hold on;
+plot(result.time, result.stateddot(2,:),'--','LineWidth',1.5); 
+%ylim([-1.5 1.5]);
+xlabel('time[sec]'); ylabel('acc[m/s^2]');
+title('Acceleration of mobile robot','fontsize',14, 'fontweight','bold');
+hold off;
+
+
+% matrix dependent on mobile robot's yaw angle
 function mat = hpsi_inv(psi)
 psi = psi + pi/4;
 sqrt2 = sqrt(2);
@@ -194,17 +256,20 @@ mat = 0.25 * [-sqrt2*sin(psi) sqrt2*cos(psi) 0.3;
                 sqrt2*cos(psi) sqrt2*sin(psi) 0.3];
 end
 
+% inverse matrix dependent on mobile robot's yaw angle
 function mat = h_psi(psi)
 % returns psi 3x4 matrix
 psi = psi + pi/4;
-root2 = sqrt(2);
+sqrt2 = sqrt(2);
 
 % third row should be 1/(a+b) which will be 1/(2*rou)
-mat = [-root2*sin(psi) root2*cos(psi) -root2*sin(psi) root2*cos(psi);
-        root2*cos(psi) root2*sin(psi) root2*cos(psi) root2*sin(psi);
+mat = [-sqrt2*sin(psi) sqrt2*cos(psi) -sqrt2*sin(psi) sqrt2*cos(psi);
+        sqrt2*cos(psi) sqrt2*sin(psi) sqrt2*cos(psi) sqrt2*sin(psi);
         10/3 -10/3 -10/3 10/3];
 end
 
+% wheel velocity calculator (rad/sec), dependent on current mobile robot's
+% state
 function wheelVel= getwheelvel(psi, cur_state_dot)
 R = 0.05;   % wheel radius [m]
 hpsi_inv_mat = hpsi_inv(psi);
