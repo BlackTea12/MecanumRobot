@@ -1,12 +1,21 @@
 % PLOT RESULTS
-
+close all; clc;
 %% trajectory
 figure(1);
 time = [1:length(out.tout)];
 robot_X = getdatasamples(out.robot_pos_x, time);
 robot_Y = getdatasamples(out.robot_pos_y, time);
-plot(robot_X, robot_Y,'g--','LineWidth',1.5); grid on; hold on;
 plot(0,0,'ro','LineWidth',2);
+grid on; hold on;
+xlim([-0.1 1.3]); ylim([-0.1 1.3]);
+for i = 1:length(robot_X)
+ppp = plot(robot_X(i), robot_Y(i),'go','LineWidth',1.5); % grid on; hold on;
+drawnow;
+ppp(delete);
+%plot(0,0,'ro','LineWidth',2);
+end
+% plot(robot_X, robot_Y,'g--','LineWidth',1.5); grid on; hold on;
+% plot(0,0,'ro','LineWidth',2);
 % xlim([-1.4 0.1]); ylim([-0.5 0.5]);
 xlabel('X[m]'); ylabel('Y[m]');
 title('Trajectory of 4 mecanum wheeled robot','fontsize',14);
