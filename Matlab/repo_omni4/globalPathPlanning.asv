@@ -22,18 +22,11 @@
 close all; clear all; clc;
 image1 = imread('factory01.pgm');
 imshow(image1);
-% make clean floor
-len = size(image1);
-for i = 1:len(1)
-    for j = 1:len(2)
-        if image1(i,j) < 10
-            image1(i,j) = 0;
-        end
-    end
-end
+%
+for 
 imageNorm = double(image1)/255;
 imageOccupancy = imageNorm; % revert black and white
-map2 = occupancyMap(imageOccupancy,1);
+map2 = occupancyMap(imageOccupancy,10);
 
 figure(1);
 show(map2);
@@ -51,32 +44,32 @@ show(map2);
 % sv.ValidationDistance = 0.01;
 % ss.StateBounds = [map2.XWorldLimits; map2.YWorldLimits; [pi pi]];
 
-bounds = [map2.XWorldLimits; map2.YWorldLimits; [pi/2 pi/2]];
+bounds = [map2.XWorldLimits; map2.YWorldLimits; [-pi/2 pi/2]];
 ss = stateSpaceDubins(bounds);
-ss.MinTurningRadius = 0.1;
+ss.MinTurningRadius = 0.3;
 sv = validatorOccupancyMap(ss);
 sv.Map = map2;
-sv.ValidationDistance = 0.01;
+sv.ValidationDistance = 0.05;
 
 
 planner = plannerRRTStar(ss,sv);
-planner.ContinueAfterGoalReached = true; %optimization
-planner.MaxIterations = 800000;
-planner.MaxConnectionDistance = 1;    %[m]
+planner.ContinueAfterGoalReached = false; %optimization
+planner.MaxIterations = 10000;
+planner.MaxConnectionDistance = 0.5;    %[m]
 
 figure(2);
 show(map2)
-start = [210, 115, 0]; goal = [278, 340, 0]; %[396, 400, 0];
+start = [23, 5, 0]; goal = [24, 34, 0];
 rng(100,'twister');
 %startT = tic();    % start timer
 [pthObj,solnInfo] = plan(planner,start,goal);
 %endT = toc(startT);    % end timer
 
 hold on; grid on;
-plot(start(1), start(2), 'o','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor','magenta');
-plot(goal(1), goal(2), 's','MarkerSize',10,'MarkerEdgeColor','k','MarkerFaceColor','b');
+plot(23, 5, 'o','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor','magenta');
+plot(24, 34, 's','MarkerSize',10,'MarkerEdgeColor','k','MarkerFaceColor','b');
 plot(solnInfo.TreeData(:,1),solnInfo.TreeData(:,2), '.-'); % tree expansion
-plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',1); % draw path
+plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',2); % draw path
 % endT
 % flag = true;
 % while(flag)
