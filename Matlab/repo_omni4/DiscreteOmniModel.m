@@ -117,7 +117,8 @@
 % end
 
 %% discrete conventional smc
-close all; clear all; clc;
+%close all; 
+clear all; clc; cla;
 R = 0.05;   % wheel radius [m]
 J1 = 0.095;%0.000625;  % nominal inertial of wheel [kgm^2]
 H = [0 J1/2 0 J1/2;
@@ -130,7 +131,7 @@ lamda2 = 8;
 lamda3 = 8;
 lamda = [lamda1 0 0; 0 lamda2 0; 0 0 lamda3];
 N = diag([8*d;8*d;4*d/0.3]);
-dt = 0.005;
+dt = 0.01;
 
 % initialize
 cur_state.state = [0;0;0];
@@ -144,8 +145,8 @@ des_state.prestatedot = [0;0;0];
 err.state = [0;0;0];
 err.prestate = [0;0;0];
 
-slope = 5;
-radius = 5;
+slope = 1.5;
+radius = 4.5;
 
 % data storage
 result.time = 0;
@@ -157,13 +158,23 @@ result.wheelvel = [0;0;0;0];
 result.svar = [0;0;0];
 
 figure(1); hold on; grid on;
+title('trajectory','fontsize',14,'fontweight','bold');
+xlabel('X[m]','fontsize',12); ylabel('Y[m]','fontsize',12);
+t = 0:0.1:10;
+% plot(radius*sin(t), radius*cos(t),'g','LineWidth',2); % circle trajectory
+plot(t, 2+t*slope,'g','LineWidth',2); % slope trajectory
+legend('reference path', 'Location', 'Best','fontsize',13);
+
 % xlim([-0.5 10]); ylim([-160 160]);  % control input u limit
 % xlim([-10 10]); ylim([-10 10]); % trajectory limit
-
+xlim([0 8]); ylim([0 16]); % slope trajectory limit
+%xlim([-6 6]); ylim([-6 6]); % circle trajectory limit
 cnt = 2;
-for i=dt:dt:10
+%%
+filename = 'slopeTrajectory.gif';
+for i=dt:dt:6
     % ramp input,
-%     des_state.state = [i;slope*i;deg2rad(45)];
+%     des_state.state = [i;2+slope*i;0];
 %     des_state.statedot = [1;slope;0];
 
     % circle input
@@ -199,6 +210,7 @@ for i=dt:dt:10
     result.wheeldeg(:,cnt) = result.wheeldeg(:,cnt-1)+wheelVel*dt;
     result.wheelvel(:,cnt) = wheelVel;
     result.svar(:,cnt-1) = s;
+    result.errorDist(cnt-1) = sqrt(err.state(1)^2+err.state(2)^2);
     cnt = cnt+1;
     
     % data saving
@@ -211,10 +223,12 @@ for i=dt:dt:10
     
     % draw now
     % trajectory
-    p_tr = plot(cur_state.state(1),cur_state.state(2),'r.');
-    txt = text(1,1,string(i));
-    drawnow;
-    delete(txt); 
+%     p_tr = plot(cur_state.state(1),cur_state.state(2),'r.');
+% %     txt = text(4,5,'t: '+string(i)+'(s)');  % circle
+%     txt = text(1,14,'t: '+string(i)+'(s)');  % slope
+%     p_tr.Annotation.LegendInformation.IconDisplayStyle = 'off';
+%     drawnow;
+%     delete(txt); 
     %delete(p_tr);   
     
     % error
@@ -234,6 +248,17 @@ for i=dt:dt:10
 %     txt = text(1,1,string(i));
 %     drawnow;
 %     delete(txt);
+
+    % save as .gif
+%     frame = getframe(1);
+%     img = frame2im(frame);
+%     [imind cm] = rgb2ind(img,256);
+%     if i == dt
+%         imwrite(imind,cm,filename,'gif','Loopcount',1,'DelayTime',1/18);
+%     else
+%         imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',1/18);
+%     end
+%     delete(txt); 
 end
 
 %% result plot
