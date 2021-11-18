@@ -75,7 +75,7 @@ rng(100,'twister');
 hold on; grid on;
 plot(start(1), start(2), 'o','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor','magenta');
 plot(goal(1), goal(2), 's','MarkerSize',10,'MarkerEdgeColor','k','MarkerFaceColor','b');
-plot(solnInfo.TreeData(:,1),solnInfo.TreeData(:,2), '.-'); % tree expansion
+%plot(solnInfo.TreeData(:,1),solnInfo.TreeData(:,2), '.-'); % tree expansion
 plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',1); % draw path
 % endT
 % flag = true;
@@ -93,3 +93,32 @@ plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',1); % draw path
 %     end
 %     delete(f)
 % end
+
+%% plot final results, tracking and planning
+traj_len = size(robotpathObj.state, 2);
+close all;clc;
+% filename = 'pathtracking01.gif';
+show(map2)
+hold on; grid on;
+plot(start(1), start(2), 'o','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor','magenta');
+plot(goal(1), goal(2), 's','MarkerSize',10,'MarkerEdgeColor','k','MarkerFaceColor','b');
+plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',0.7); % draw path
+%%
+for i=1:traj_len-1
+    % save as .gif
+%     frame = getframe(1);
+%     img = frame2im(frame);
+%     [imind cm] = rgb2ind(img,256);
+%     if i == 1
+%         imwrite(imind,cm,filename,'gif','Loopcount',1,'DelayTime',1/18);
+%     else
+%         imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',1/18);
+%     end
+    p_tr = plot(robotpathObj.state(1,i+1),robotpathObj.state(2,i+1),'g.');%o','MarkerSize',7, 'MarkerFace','green');
+    %txt = text(100,100,'t: '+string(robotpathObj.time(i))+'(s)');
+    p_tr.Annotation.LegendInformation.IconDisplayStyle = 'off';
+    drawnow;
+    %delete(txt); 
+    %delete(p_tr);  
+end
+%plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',0.7); % draw path
