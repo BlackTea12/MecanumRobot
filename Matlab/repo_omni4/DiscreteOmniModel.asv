@@ -262,140 +262,59 @@ for i=dt:dt:6
 end
 
 %% using function to track
-clc; close all;
-figure(1);
-plot(pthObj.States(:,1),pthObj.States(:,2),'r-.','LineWidth',1); hold on; grid on;
-legend('reference trajectory');
-
-disp("Start Tracking...");
-%-------------------------robot's parameter---------------------------------------%
-R = 0.05;   % wheel radius [m]
-J1 = 0.095;%0.000625;  % nominal inertial of wheel [kgm^2]
-H = [0 J1/2 0 J1/2;
-     -J1/2 0 -J1/2 0;
-     0 J1/2 0 J1/2;
-     -J1/2 0 -J1/2 0];
-d = 25; %[Nm] 
-lamda1 = 8;
-lamda2 = 8;
-lamda3 = 8;
-lamda = [lamda1 0 0; 0 lamda2 0; 0 0 lamda3];
-N = diag([8*d;8*d;4*d/0.3]);
-%---------------------------------------------------------------------------------%
-
-dt = 0.01;  % time variable
-
-% initialize
-cur_state.state = transpose(start);
-cur_state.statedot = [0;0;0];
-cur_state.state2dot = [0;0;0];
-
-des_state.state = [0;0;0];
-des_state.statedot = [0;0;0];
-des_state.prestatedot = [0;0;0];
-
-err.state = [0;0;0];
-err.prestate = [0;0;0];
-
-% data storage
-robotpathObj.time = 0;
-robotpathObj.state = [0;0;0];
-robotpathObj.statedot = [0;0;0];
-robotpathObj.stateddot = [0;0;0];
-robotpathObj.wheeldeg = [0;0;0;0];
-robotpathObj.wheelvel = [0;0;0;0];
-robotpathObj.svar = [0;0;0];
-
-index = 1;
-length = size(pthObj.States,1);
-cnt = 2;
-
-% start tracking
-while true
-    % deciding desired point based on refDisp
-    if index == length
-        des_state.state = transpose(pthObj.States(index,:));
-    else
-        for j = index:length
-            temp = cur_state.state - transpose(pthObj.States(j,:)); temp(3,1) = 0;
-            pos =  norm(temp);
-            if pos >= 5
-                index = j;
-                des_state.state = transpose(pthObj.States(j,:));
-                break;
-            end
-        end
-    end
-    
-    % error calculation
-    err.state = - cur_state.state + des_state.state;
-    errdot = (err.state - err.prestate)/dt;
-    
-    % state ddot calculation
-    Qr2dot = (des_state.statedot - des_state.prestatedot)/dt;
-    
-    % conventional sliding mode variable calculation
-    s = errdot + lamda*err.state;    
-    hpsi_inv_mat = hpsi_inv(cur_state.state(3));   
-
-    % final control input
-    ctr_in = hpsi_inv_mat*(4*J1/R*(Qr2dot+lamda*errdot)+N*sign(s));
-    
-    % ctr input to plant model
-    hpsi_mat = h_psi(cur_state.state(3));
-    cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
-    
-    % wheel velocity calculation
-    wheelVel= getwheelvel(cur_state.state(3), cur_state.statedot);
-    
-    % store data
-    robotpathObj.time(cnt) = robotpathObj.time(cnt-1) + dt;
-    robotpathObj.state(:,cnt) = cur_state.state;
-    robotpathObj.statedot(:,cnt) = cur_state.statedot;
-    robotpathObj.stateddot(:,cnt) = cur_state.state2dot;
-    robotpathObj.wheeldeg(:,cnt) = robotpathObj.wheeldeg(:,cnt-1)+wheelVel*dt;
-    robotpathObj.wheelvel(:,cnt) = wheelVel;
-    robotpathObj.svar(:,cnt-1) = s;
-    robotpathObj.errorDist(cnt-1) = sqrt(err.state(1)^2+err.state(2)^2);
-    
-    % data saving
-    cur_state.statedot = cur_state.statedot + dt*cur_state.state2dot;
-    cur_state.state = cur_state.state + dt*cur_state.statedot;
-
-    % pre data saving
-    des_state.prestatedot = des_state.statedot;
-    err.prestate = err.state;
-    
-    % draw now
-    % trajectory
-    p_tr = plot(cur_state.state(1),cur_state.state(2),'g.');
-    txt = text(1,1,'t: '+string(robotpathObj.time(cnt))+'(s)');
-    p_tr.Annotation.LegendInformation.IconDisplayStyle = 'off';
-    drawnow;
-    delete(txt); 
-    
-    % check for goal arrival
-    arrivalPos = transpose(goal)-cur_state.state; arrivalPos(3,1) = 0;
-    if norm(arrivalPos) < 0.05
-        break;
-    end
-    
-    cnt = cnt+1;
-end
-disp("Tracking Finished...");
-
-
-%robotpathObj = mecanumTracking(start, goal, pthObj, 5, 0.05);
+robotpathObj = mecanumTracking(start, goal, pthObj, 3, 0.05);
 
 %% result plot
 % figure(2);
-plot(result.time, result.stateddot(1,:),'LineWidth',1.5); grid on; hold on;
-plot(result.time, result.stateddot(2,:),'--','LineWidth',1.5); 
-%ylim([-1.5 1.5]);
-xlabel('time[sec]'); ylabel('acc[m/s^2]');
-title('Acceleration of mobile robot','fontsize',14, 'fontweight','bold');
+% plot(result.time, result.stateddot(1,:),'LineWidth',1.5); grid on; hold on;
+% plot(result.time, result.stateddot(2,:),'--','LineWidth',1.5); 
+% %ylim([-1.5 1.5]);
+% xlabel('time[sec]'); ylabel('acc[m/s^2]');
+% title('Acceleration of mobile robot','fontsize',14, 'fontweight','bold');
+% hold off;
+figure(1);
+
+
+subplot(2,2,1); % acc
+plot(robotpathObj.time, robotpathObj.stateddot(1,:),'LineWidth',1.5); grid on; hold on;
+plot(robotpathObj.time, robotpathObj.stateddot(2,:),'--','LineWidth',1.5);
+legend('x axis', 'y axis','fontsize',14); 
+title('Acceleration'); xlabel('time[sec]','fontsize',15); ylabel('acc[m/s^2]','fontsize',15);
+xlim([0 83]); 
 hold off;
 
+subplot(2,2,2); % vel
+plot(robotpathObj.time, robotpathObj.statedot(1,:),'LineWidth',1.5); grid on; hold on;
+plot(robotpathObj.time, robotpathObj.statedot(2,:),'--','LineWidth',1.5);
+legend('x axis', 'y axis', 'fontsize',14);
+title('Velocity'); xlabel('time[sec]','fontsize',15); ylabel('vel[m/s]','fontsize',15);
+hold off;
+
+subplot(2,2,3); % final acc 
+grid on; hold on;
+for i = 1:size(robotpathObj.time)
+    acc_result = sqrt(robotpathObj.stateddot(1,i)^2 + robotpathObj.stateddot(2,i)^2);
+    plot(robotpathObj.time(i), acc_result,'.');
+end
+% legend('x axis', 'y axis','fontsize',14);
+title('Acceleration Vector Norm'); xlabel('time[sec]','fontsize',15); ylabel('acc[m/s^2]','fontsize',15);
+hold off;
+
+subplot(2,2,4); % final vel
+title('Velocity Vector Norm'); xlabel('time[sec]','fontsize',15); ylabel('vel[m/s]','fontsize',15);
+grid on; hold on;
+for i = 1:size(robotpathObj.time)
+    acc_result = sqrt(robotpathObj.statedot(1,i)^2 + robotpathObj.statedot(2,i)^2);
+    plot(robotpathObj.time(i), acc_result,'.');
+end
+% legend('x axis', 'y axis', 'fontsize',14);
+hold off;
+
+% subplot(2,2,[3 4]); % error
+% plot(robotpathObj.time(1:end-1), robotpathObj.errorDist, 'LineWidth', 1.5); grid on;
+% title('Tracking Error'); xlabel('time[sec]','fontsize',15); ylabel('error[m]','fontsize',15);
+
+%----------------------------------------------------------------------------------%
 % given start and goal point and pathObj
 % with refDisp which is reference distance point
 % dependent on mobile robot's position
@@ -478,6 +397,15 @@ while true
     % ctr input to plant model
     hpsi_mat = h_psi(cur_state.state(3));
     cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
+    
+    % x-y acceleration limit(unfinished)
+    acc_limit = 2.5;    % [10m/s^2]
+    indicator_acc = norm(cur_state.state2dot(1:2,1));
+    if indicator_acc >= acc_limit
+        gain = acc_limit / indicator_acc;
+        ctr_in = ctr_in*gain;
+        cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
+    end
     
     % wheel velocity calculation
     wheelVel= getwheelvel(cur_state.state(3), cur_state.statedot);

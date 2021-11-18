@@ -18,7 +18,7 @@
 % 
 % end
 
-%%
+%% map callback
 close all; clear all; clc;
 image1 = imread('factory01.pgm');
 imshow(image1);
@@ -35,8 +35,8 @@ imageNorm = double(image1)/255;
 imageOccupancy = imageNorm; % revert black and white
 map2 = occupancyMap(imageOccupancy,1);
 
-figure(1);
-show(map2);
+% figure(1);
+% show(map2);
 
 % image2 = imread('workspace_ex02.pgm');
 % imageNorm = double(image2)/255;
@@ -58,13 +58,20 @@ sv = validatorOccupancyMap(ss);
 sv.Map = map2;
 sv.ValidationDistance = 0.01;
 
-
+% rrt star planner
 planner = plannerRRTStar(ss,sv);
 planner.ContinueAfterGoalReached = true; %optimization
 planner.MaxIterations = 800000;
 planner.MaxConnectionDistance = 1;    %[m]
 
-figure(2);
+% a star planner
+planner_compare = plannerAStarGrid(map2);
+st = [650,210];
+goa = [350,275];
+plan(planner_compare,st,goa);
+close all; show(planner_compare);
+
+% figure(2);
 show(map2)
 start = [210, 115, 0]; goal = [278, 340, 0]; %[396, 400, 0];
 rng(100,'twister');
@@ -115,10 +122,13 @@ for i=1:traj_len-1
 %         imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',1/18);
 %     end
     p_tr = plot(robotpathObj.state(1,i+1),robotpathObj.state(2,i+1),'g.');%o','MarkerSize',7, 'MarkerFace','green');
-    %txt = text(100,100,'t: '+string(robotpathObj.time(i))+'(s)');
+    tempvel = [robotpathObj.statedot(1,i+1),robotpathObj.statedot(2,i+1)];
+    vel = text(100,80,'v: '+string(norm(tempvel))+'(m/s)');
+    txt = text(100,100,'t: '+string(robotpathObj.time(i))+'(s)');
     p_tr.Annotation.LegendInformation.IconDisplayStyle = 'off';
     drawnow;
-    %delete(txt); 
+    delete(txt); 
+    delete(vel);
     %delete(p_tr);  
 end
 %plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',0.7); % draw path

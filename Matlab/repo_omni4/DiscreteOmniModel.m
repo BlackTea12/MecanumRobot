@@ -262,17 +262,60 @@ for i=dt:dt:6
 end
 
 %% using function to track
-robotpathObj = mecanumTracking(start, goal, pthObj, 5, 0.05);
+robotpathObj = mecanumTracking(start, goal, pthObj, 3, 0.05);
 
 %% result plot
 % figure(2);
-plot(result.time, result.stateddot(1,:),'LineWidth',1.5); grid on; hold on;
-plot(result.time, result.stateddot(2,:),'--','LineWidth',1.5); 
-%ylim([-1.5 1.5]);
-xlabel('time[sec]'); ylabel('acc[m/s^2]');
-title('Acceleration of mobile robot','fontsize',14, 'fontweight','bold');
+% plot(result.time, result.stateddot(1,:),'LineWidth',1.5); grid on; hold on;
+% plot(result.time, result.stateddot(2,:),'--','LineWidth',1.5); 
+% %ylim([-1.5 1.5]);
+% xlabel('time[sec]'); ylabel('acc[m/s^2]');
+% title('Acceleration of mobile robot','fontsize',14, 'fontweight','bold');
+% hold off;
+figure(1);
+
+
+subplot(2,2,1); % acc
+plot(robotpathObj.time, robotpathObj.stateddot(1,:),'LineWidth',1.5); grid on; hold on;
+plot(robotpathObj.time, robotpathObj.stateddot(2,:),'--','LineWidth',1.5);
+legend('x axis', 'y axis','fontsize',14); 
+title('Acceleration','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('acc[m/s^2]','fontsize',15);
+xlim([0 83]); ylim([-4 4]);
 hold off;
 
+subplot(2,2,2); % vel
+plot(robotpathObj.time, robotpathObj.statedot(1,:),'LineWidth',1.5); grid on; hold on;
+plot(robotpathObj.time, robotpathObj.statedot(2,:),'--','LineWidth',1.5);
+legend('x axis', 'y axis', 'fontsize',14);
+title('Velocity','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('vel[m/s]','fontsize',15);
+xlim([0 83]); ylim([-5 5]);
+hold off;
+
+subplot(2,2,3); % final acc 
+for i = 1:size(robotpathObj.time,2)
+    acc_result(i) = sqrt(robotpathObj.stateddot(1,i)^2 + robotpathObj.stateddot(2,i)^2);
+end
+plot(robotpathObj.time, acc_result,'b'); grid on;
+title('Acceleration Vector Norm','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('acc[m/s^2]','fontsize',15);
+xlim([0 83]); ylim([-1 4]);
+% legend('x axis', 'y axis','fontsize',14);
+
+
+subplot(2,2,4); % final vel
+for i = 1:size(robotpathObj.time,2)
+    acc_result(i) = sqrt(robotpathObj.statedot(1,i)^2 + robotpathObj.statedot(2,i)^2);
+end
+% legend('x axis', 'y axis', 'fontsize',14);
+plot(robotpathObj.time, acc_result,'b'); grid on;
+title('Velocity Vector Norm','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('vel[m/s]','fontsize',15);
+xlim([0 83]); ylim([0 6]);
+hold off;
+
+% subplot(2,2,[3 4]); % error
+% plot(robotpathObj.time(1:end-1), robotpathObj.errorDist, 'LineWidth', 1.5); grid on;
+% title('Tracking Error'); xlabel('time[sec]','fontsize',15); ylabel('error[m]','fontsize',15);
+
+%----------------------------------------------------------------------------------%
 % given start and goal point and pathObj
 % with refDisp which is reference distance point
 % dependent on mobile robot's position
@@ -355,6 +398,15 @@ while true
     % ctr input to plant model
     hpsi_mat = h_psi(cur_state.state(3));
     cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
+    
+    % x-y acceleration limit(unfinished)
+    acc_limit = 2.5;    % [10m/s^2]
+    indicator_acc = norm(cur_state.state2dot(1:2,1));
+    if indicator_acc >= acc_limit
+        gain = acc_limit / indicator_acc;
+        ctr_in = ctr_in*gain;
+        cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
+    end
     
     % wheel velocity calculation
     wheelVel= getwheelvel(cur_state.state(3), cur_state.statedot);
