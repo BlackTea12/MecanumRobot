@@ -132,3 +132,41 @@ for i=1:traj_len-1
     %delete(p_tr);  
 end
 %plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',0.7); % draw path
+
+% summary of rrt star planner
+function [pthObj,solnInfo] = RRTStarPlannerSum(map, start, goal, connectionDis, iterations)
+bounds = [map.XWorldLimits; map.YWorldLimits; [-pi pi]];
+ss = stateSpaceDubins(bounds);
+ss.MinTurningRadius = 0.3;
+sv = validatorOccupancyMap(ss);
+sv.Map = map;
+sv.ValidationDistance = 0.1;
+
+planner = plannerRRTStar(ss,sv);
+planner.ContinueAfterGoalReached = true; %optimization
+planner.MaxIterations = iterations;
+planner.MaxConnectionDistance = connectionDis;    %[m]
+
+[pthObj,solnInfo] = plan(planner,start,goal);
+end
+
+% str_pgm will have a format of string
+% ex: test.pgm
+function map = drawMapOccupancy(str_pgm, resolution)
+image = imread(str_pgm);
+% imshow(image);
+
+% make clean floor
+len = size(image);
+
+for i = 1:len(1)
+    for j = 1:len(2)
+        if image(i,j) < 10
+            image(i,j) = 0;
+        end
+    end
+end
+imageNorm = double(image)/255;
+imageOccupancy = imageNorm; % revert black and white
+map = occupancyMap(imageOccupancy,resolution);
+end
