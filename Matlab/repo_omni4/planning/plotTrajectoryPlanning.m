@@ -1,20 +1,16 @@
 % plot Occupancy map based results
-function plotTrajectoryPlanning(map,pthObj,solnInfo,solnInfo_on, start, goal,robotpathObj)
+function plotTrajectoryPlanning(map,pthObj,solnInfo,solnInfo_on, start, goal, robotpathObj)
 % trajectory in map
 show(map); hold on;
 if solnInfo_on == true
-    plot(solnInfo.TreeData(:,1),solnInfo.TreeData(:,2), '.-');%plot(solnInfo.TreeData(:,1),solnInfo.TreeData(:,2),'color',[0.7 0.7 0.7],'--','LineWidth',0.5); % draw trajectory path
+    plot(solnInfo.TreeData(:,1),solnInfo.TreeData(:,2), '.-','color','[0.9 0.9 0.9]');
 end
+plot(pthObj.States(:,1),pthObj.States(:,2),'b-.','LineWidth',0.7,'MarkerSize',4); % draw trajectory path
 plot(start(1), start(2), 'o','MarkerSize',8,'MarkerEdgeColor','red','MarkerFaceColor','red');  % start point(circle)
 plot(goal(1), goal(2), 's','MarkerSize',8,'MarkerEdgeColor','k','MarkerFaceColor','green');    % goal point(square)
-plot(pthObj.States(:,1),pthObj.States(:,2),'b-.','LineWidth',0.7,'MarkerSize',4); % draw trajectory path
-
-
-
-hold off;
 
 % robot behavior 
-figure(2);
+figure();
 subplot(2,2,1); % acceleration
 plot(robotpathObj.time, robotpathObj.stateddot(1,:),'LineWidth',1.5); grid on; hold on;
 plot(robotpathObj.time, robotpathObj.stateddot(2,:),'--','LineWidth',1.5);
@@ -49,6 +45,14 @@ end
 plot(robotpathObj.time, acc_result,'b'); grid on;
 title('Velocity Vector Norm','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('vel[m/s]','fontsize',15);
 xlim([0 robotpathObj.time(end)]); ylim([0 6]);
+hold off;
+
+figure();
+plot(robotpathObj.time(1:end-1), robotpathObj.svar(1,:)); hold on; grid on;
+plot(robotpathObj.time(1:end-1), robotpathObj.svar(2,:));
+plot(robotpathObj.time(1:end-1), robotpathObj.svar(3,:));
+title('Sliding surface','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('s','fontsize',15);
+xlim([0 robotpathObj.time(end)]); %ylim([0 6]);
 hold off;
 
 end

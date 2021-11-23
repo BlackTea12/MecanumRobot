@@ -103,14 +103,14 @@ plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',1); % draw path
 
 %% plot final results, tracking and planning
 traj_len = size(robotpathObj.state, 2);
-close all;clc;
-% filename = 'pathtracking01.gif';
-show(map2)
-hold on; grid on;
-plot(start(1), start(2), 'o','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor','magenta');
-plot(goal(1), goal(2), 's','MarkerSize',10,'MarkerEdgeColor','k','MarkerFaceColor','b');
-plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',0.7); % draw path
-%%
+% close all;clc;
+% % filename = 'pathtracking01.gif';
+% show(map2)
+% plot(start(1), start(2), 'o','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor','magenta');
+% plot(goal(1), goal(2), 's','MarkerSize',10,'MarkerEdgeColor','k','MarkerFaceColor','b');
+% plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',0.7); % draw path
+filename = 'track1123.gif';
+cnt = 1;
 for i=1:traj_len-1
     % save as .gif
 %     frame = getframe(1);
@@ -122,14 +122,19 @@ for i=1:traj_len-1
 %         imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',1/18);
 %     end
     p_tr = plot(robotpathObj.state(1,i+1),robotpathObj.state(2,i+1),'g.');%o','MarkerSize',7, 'MarkerFace','green');
+    p_reftr = plot(robotpathObj.refstate(1,i+1),robotpathObj.refstate(2,i+1),'bo');
     tempvel = [robotpathObj.statedot(1,i+1),robotpathObj.statedot(2,i+1)];
     vel = text(100,80,'v: '+string(norm(tempvel))+'(m/s)');
     txt = text(100,100,'t: '+string(robotpathObj.time(i))+'(s)');
     p_tr.Annotation.LegendInformation.IconDisplayStyle = 'off';
+    p_reftr.Annotation.LegendInformation.IconDisplayStyle = 'off';
     drawnow;
+    saveGIF(cnt, filename, 18,2);
     delete(txt); 
     delete(vel);
+    delete(p_reftr);
     %delete(p_tr);  
+    cnt = cnt + 1;
 end
 %plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',0.7); % draw path
 

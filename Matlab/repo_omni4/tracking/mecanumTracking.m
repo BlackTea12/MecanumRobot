@@ -12,9 +12,9 @@ H = [0 J1/2 0 J1/2;
      0 J1/2 0 J1/2;
      -J1/2 0 -J1/2 0];
 d = 25; %[Nm] 
-lamda1 = 8;
-lamda2 = 8;
-lamda3 = 8;
+lamda1 = 0.02;   %8
+lamda2 = 0.02;   %8
+lamda3 = 0.02;   %8
 lamda = [lamda1 0 0; 0 lamda2 0; 0 0 lamda3];
 N = diag([8*d;8*d;4*d/0.3]);
 %---------------------------------------------------------------------------------%
@@ -35,6 +35,7 @@ err.prestate = [0;0;0];
 
 % data storage
 robotpathObj.time = 0;
+robotpathObj.refstate = [0;0;0];
 robotpathObj.state = [0;0;0];
 robotpathObj.statedot = [0;0;0];
 robotpathObj.stateddot = [0;0;0];
@@ -100,19 +101,20 @@ while true
     
     
     % x-y acceleration limit(unfinished)
-%     acc_limit = 2.5;    % [10m/s^2]
-%     indicator_acc = norm(cur_state.state2dot(1:2,1));
-%     if indicator_acc >= acc_limit
-%         gain = acc_limit / indicator_acc;
-%         ctr_in = ctr_in*gain;
-%         cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
-%     end
+    acc_limit = 0.1;    % [10m/s^2]
+    indicator_acc = norm(cur_state.state2dot(1:2,1));
+    if indicator_acc >= acc_limit
+        gain = acc_limit / indicator_acc;
+        ctr_in = ctr_in*gain;
+        cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
+    end
     
     % wheel velocity calculation
     wheelVel= getwheelvel(cur_state.state(3), cur_state.statedot);
     
     % store data
     robotpathObj.time(cnt) = robotpathObj.time(cnt-1) + dt;
+    robotpathObj.refstate(:,cnt) = des_state.state;
     robotpathObj.state(:,cnt) = cur_state.state;
     robotpathObj.statedot(:,cnt) = cur_state.statedot;
     robotpathObj.stateddot(:,cnt) = cur_state.state2dot;

@@ -1,5 +1,5 @@
-function saveGIF(timestep, filename, fps)
-frame = getframe(1);
+function saveGIF(timestep, filename, fps, num)
+frame = getframe(num);
 img = frame2im(frame);
 [imind, cm] = rgb2ind(img,256);
 if timestep == 1    % first step
