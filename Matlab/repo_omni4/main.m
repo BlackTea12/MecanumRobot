@@ -22,7 +22,7 @@ ytemp = interp1(t,pthObj.States(:,2),tq,'spline');
 smtObj.States(1:size(xtemp,2),1) = transpose(xtemp);
 smtObj.States(1:size(ytemp,2),2) = transpose(ytemp);
 smtObj.States(1:size(ytemp,2),3) = zeros(size(ytemp,2),1);
-
+%%
 tempPlotPlanning(map,start,goal,pthObj,solnInfo,true);
 smp=plot(xtemp,ytemp,'g:','LineWidth',1.7);
 
@@ -30,11 +30,10 @@ legend('planned path','smooth path');
 
 %% get tracking result
 % robotpathObj = mecanumTracking(start, goal, pthObj, 1, 0.5);
-robotpathObj = mecanumTracking(start, smtObj.States(end,:), smtObj, 0.1, 0.1);
+robotpathObj = mecanumTracking(start, smtObj.States(end,:), smtObj, 0.24, 0.1); %0.25
 
 %% plot results
 close all; cla;
-figure();
 plotTrajectoryPlanning(map,smtObj,solnInfo, true, start, smtObj.States(end,:),robotpathObj)
 
 function tempPlotPlanning(map,start,goal,pthObj,solnInfo,solnInfo_on)

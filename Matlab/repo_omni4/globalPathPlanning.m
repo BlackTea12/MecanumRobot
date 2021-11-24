@@ -79,6 +79,7 @@ rng(100,'twister');
 [pthObj,solnInfo] = plan(planner,start,goal);
 %endT = toc(startT);    % end timer
 
+%%
 hold on; grid on;
 plot(start(1), start(2), 'o','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor','magenta');
 plot(goal(1), goal(2), 's','MarkerSize',10,'MarkerEdgeColor','k','MarkerFaceColor','b');
@@ -109,7 +110,7 @@ traj_len = size(robotpathObj.state, 2);
 % plot(start(1), start(2), 'o','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor','magenta');
 % plot(goal(1), goal(2), 's','MarkerSize',10,'MarkerEdgeColor','k','MarkerFaceColor','b');
 % plot(pthObj.States(:,1),pthObj.States(:,2),'r-','LineWidth',0.7); % draw path
-filename = 'track1123.gif';
+% filename = 'track1123.gif';
 cnt = 1;
 for i=1:traj_len-1
     % save as .gif
@@ -129,7 +130,7 @@ for i=1:traj_len-1
     p_tr.Annotation.LegendInformation.IconDisplayStyle = 'off';
     p_reftr.Annotation.LegendInformation.IconDisplayStyle = 'off';
     drawnow;
-    saveGIF(cnt, filename, 18,2);
+    % saveGIF(cnt, filename, 18,2);
     delete(txt); 
     delete(vel);
     delete(p_reftr);

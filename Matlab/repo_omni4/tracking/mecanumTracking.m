@@ -12,9 +12,9 @@ H = [0 J1/2 0 J1/2;
      0 J1/2 0 J1/2;
      -J1/2 0 -J1/2 0];
 d = 25; %[Nm] 
-lamda1 = 0.02;   %8
-lamda2 = 0.02;   %8
-lamda3 = 0.02;   %8
+lamda1 = 0.028;   %8
+lamda2 = 0.028;   %8
+lamda3 = 0.028;   %8
 lamda = [lamda1 0 0; 0 lamda2 0; 0 0 lamda3];
 N = diag([8*d;8*d;4*d/0.3]);
 %---------------------------------------------------------------------------------%
@@ -47,7 +47,7 @@ index = 1;
 length = size(pthObj.States,1);
 cnt = 2;
 tau = 0.01; 
-ctr_filter_length = 4;
+ctr_filter_length = 6;
 ctr_filter_pre = zeros(3,ctr_filter_length); % bigger the index, closer to the past data
 
 % start tracking
@@ -101,7 +101,7 @@ while true
     
     
     % x-y acceleration limit(unfinished)
-    acc_limit = 0.1;    % [10m/s^2]
+    acc_limit = 0.25;    % 0.25
     indicator_acc = norm(cur_state.state2dot(1:2,1));
     if indicator_acc >= acc_limit
         gain = acc_limit / indicator_acc;
