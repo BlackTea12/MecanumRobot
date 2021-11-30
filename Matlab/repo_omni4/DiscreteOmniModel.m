@@ -117,8 +117,10 @@
 % end
 
 %% discrete conventional smc
-close all; 
-clear all; clc; cla;
+%close all; 
+%clear all; clc; cla;
+clc;
+
 R = 0.05;   % wheel radius [m]
 J1 = 0.095;%0.000625;  % nominal inertial of wheel [kgm^2]
 H = [0 J1/2 0 J1/2;
@@ -151,31 +153,31 @@ err.state = [0;0;0];
 err.prestate = [0;0;0];
 
 % data storage
-resultCircle.time = 0;
-resultCircle.state = [0;0;0];
-resultCircle.statedot = [0;0;0];
-resultCircle.stateddot = [0;0;0];
-resultCircle.wheeldeg = [0;0;0;0];
-resultCircle.wheelvel = [0;0;0;0];
-resultCircle.svar = [0;0;0];
+resultCircle_raw.time = 0;
+resultCircle_raw.state = [0;0;0];
+resultCircle_raw.statedot = [0;0;0];
+resultCircle_raw.stateddot = [0;0;0];
+resultCircle_raw.wheeldeg = [0;0;0;0];
+resultCircle_raw.wheelvel = [0;0;0;0];
+resultCircle_raw.svar = [0;0;0];
 
 slope = 0.1;
 radius = 1;
 
-figure(1); hold on; grid on;
-
-title('trajectory','fontsize',14,'fontweight','bold');
-xlabel('X[m]','fontsize',12); ylabel('Y[m]','fontsize',12);
-t = 0:0.1:10;
-plot(radius*sin(t), radius*cos(t),'g','LineWidth',2); % circle trajectory
-% plot(t, 0.3+t*slope,'g','LineWidth',2); % slope trajectory
-plot(0,0,'r.');
-legend('reference path', 'control trajectory', 'Location', 'Best','fontsize',13);
+% figure(1); hold on; grid on;
+% 
+% title('trajectory','fontsize',14,'fontweight','bold');
+% xlabel('X[m]','fontsize',12); ylabel('Y[m]','fontsize',12);
+% t = 0:0.1:10;
+% plot(radius*sin(t), radius*cos(t),'g','LineWidth',2); % circle trajectory
+% % plot(t, 0.3+t*slope,'g','LineWidth',2); % slope trajectory
+% plot(0,0,'r.');
+% legend('reference path', 'control trajectory', 'Location', 'Best','fontsize',13);
 
 % xlim([-0.5 10]); ylim([-160 160]);  % control input u limit
 % xlim([-10 10]); ylim([-10 10]); % trajectory limit
 % xlim([0 10]); ylim([0 1.4]); % slope trajectory limit
-xlim([-radius-0.1 radius+0.1]); ylim([-radius-0.1 radius+0.1]); % circle trajectory limit
+% xlim([-radius-0.1 radius+0.1]); ylim([-radius-0.1 radius+0.1]); % circle trajectory limit
 cnt = 2;
 tau = 0.01;    %0.01
 
@@ -211,32 +213,32 @@ for i=dt:dt:10
     hpsi_mat = h_psi(cur_state.state(3));
     cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
     
-    % low pass filter
-    temp_ctr = (tau*resultCircle.stateddot(:,cnt-1) + dt*cur_state.state2dot)/(tau+dt);
-    
-    % moving average filter
-    for k=1:ctr_filter_length
-        cur_state.state2dot = cur_state.state2dot + ctr_filter_pre(:,k);
-    end
-    cur_state.state2dot = temp_ctr / (size(ctr_filter_pre,2)+1);
-    
-    for k=0:ctr_filter_length-2
-        ctr_filter_pre(:,ctr_filter_length-k) = ctr_filter_pre(:,ctr_filter_length-1-k);
-    end
-    ctr_filter_pre(:,1) = cur_state.state2dot;
+%     % low pass filter
+%     temp_ctr = (tau*resultCircle_raw.stateddot(:,cnt-1) + dt*cur_state.state2dot)/(tau+dt);
+%     
+%     % moving average filter
+%     for k=1:ctr_filter_length
+%         cur_state.state2dot = cur_state.state2dot + ctr_filter_pre(:,k);
+%     end
+%     cur_state.state2dot = temp_ctr / (size(ctr_filter_pre,2)+1);
+%     
+%     for k=0:ctr_filter_length-2
+%         ctr_filter_pre(:,ctr_filter_length-k) = ctr_filter_pre(:,ctr_filter_length-1-k);
+%     end
+%    ctr_filter_pre(:,1) = cur_state.state2dot;
     
     % wheel velocity calculation
     wheelVel= getwheelvel(cur_state.state(3), cur_state.statedot);
     
     % store data
-    resultCircle.time(cnt) = i;
-    resultCircle.state(:,cnt) = cur_state.state;
-    resultCircle.statedot(:,cnt) = cur_state.statedot;
-    resultCircle.stateddot(:,cnt) = cur_state.state2dot;
-    resultCircle.wheeldeg(:,cnt) = resultCircle.wheeldeg(:,cnt-1)+wheelVel*dt;
-    resultCircle.wheelvel(:,cnt) = wheelVel;
-    resultCircle.svar(:,cnt-1) = s;
-    resultCircle.errorDist(cnt-1) = sqrt(err.state(1)^2+err.state(2)^2);
+    resultCircle_raw.time(cnt) = i;
+    resultCircle_raw.state(:,cnt) = cur_state.state;
+    resultCircle_raw.statedot(:,cnt) = cur_state.statedot;
+    resultCircle_raw.stateddot(:,cnt) = cur_state.state2dot;
+    resultCircle_raw.wheeldeg(:,cnt) = resultCircle_raw.wheeldeg(:,cnt-1)+wheelVel*dt;
+    resultCircle_raw.wheelvel(:,cnt) = wheelVel;
+    resultCircle_raw.svar(:,cnt-1) = s;
+    resultCircle_raw.errorDist(cnt-1) = abs(norm(cur_state.state(1:2))-radius);
     cnt = cnt+1;
     
     % data saving
@@ -249,13 +251,13 @@ for i=dt:dt:10
     
     % draw now
     % trajectory
-    p_tr = plot(cur_state.state(1),cur_state.state(2),'r.');
-%     txt = text(4,5,'t: '+string(i)+'(s)');  % circle
-    txt = text(1,1,'t: '+string(i)+'(s)');  % slope
-    p_tr.Annotation.LegendInformation.IconDisplayStyle = 'off';
-    drawnow;
-    delete(txt); 
-    %delete(p_tr);   
+%     p_tr = plot(cur_state.state(1),cur_state.state(2),'r.');
+% %     txt = text(4,5,'t: '+string(i)+'(s)');  % circle
+%     txt = text(1,1,'t: '+string(i)+'(s)');  % slope
+%     p_tr.Annotation.LegendInformation.IconDisplayStyle = 'off';
+%     drawnow;
+%     delete(txt); 
+%     %delete(p_tr);   
     
     % error
 %     plot(i, err.state(1),'r.');%,i, ctr_in(2),'o',i, ctr_in(3),'o',i, ctr_in(4),'o');
@@ -286,6 +288,32 @@ for i=dt:dt:10
 %     end
 %     delete(txt); 
 end
+%
+close all; cla; figure(); hold on; grid on;
+t = 0:0.1:10;
+plot(radius*sin(t), radius*cos(t),'g','LineWidth',2); % circle trajectory
+% plot(t, 0.3+t*slope,'g','LineWidth',2); % slope trajectory
+plot(resultCircle_raw.state(1,1:150),resultCircle_raw.state(2,1:150),'r-.');
+title('trajectory','fontsize',14,'fontweight','bold'); hold on; grid on;
+xlabel('X[m]','fontsize',12); ylabel('Y[m]','fontsize',12);
+legend('reference path', 'control trajectory', 'Location', 'Best','fontsize',13);
+xlim([-radius-2 radius+2]); ylim([-radius-2 radius+2]);
+%% 
+close all;
+figure(); hold on; grid on;
+plot(resultCircle_raw.time(1:end-1),resultCircle_raw.errorDist, 'r','LineWidth', 2);
+plot(resultCircle.time(1:end-1),resultCircle.errorDist,'g-.', 'LineWidth', 2);
+title('Trajectory error','fontsize',14,'fontweight','bold'); 
+legend('SMC','SMC with filters'); ylim([-0.05 0.4]);
+xlabel('t(sec)','fontsize',12); ylabel('e_d[m]','fontsize',12); hold off;
+%%
+figure(); hold on; grid on;
+plot(resultCircle_raw.time,resultCircle_raw.wheelvel(1,:), 'r', 'LineWidth', 2);
+plot(resultCircle.time,resultCircle.wheelvel(1,:),'g-.', 'LineWidth', 2);
+title('First wheel velocity','fontsize',14,'fontweight','bold'); 
+legend('SMC','SMC with filters');
+xlim([0 2]);
+xlabel('t(sec)','fontsize',12); ylabel('vel[deg/sec]','fontsize',12); hold off;
 
 %% draw results for above calculation with interpolation
 clear all; clc; cla; close all;
@@ -306,12 +334,12 @@ cnt = 1;
 %     wheelvel(i,:) = interp1(resultSlope.time, resultSlope.wheelvel(i,:), time,'spline');
 % end
 
-time = resultCircle.time(1):dt:resultCircle.time(end);
-trajX = interp1(resultCircle.time, resultCircle.state(1,:), time,'spline'); 
-trajY = interp1(resultCircle.time, resultCircle.state(2,:), time,'spline'); 
+time = resultCircle_raw.time(1):dt:resultCircle_raw.time(end);
+trajX = interp1(resultCircle_raw.time, resultCircle_raw.state(1,:), time,'spline'); 
+trajY = interp1(resultCircle_raw.time, resultCircle_raw.state(2,:), time,'spline'); 
 wheelvel = zeros(4,size(time,2));
-for i=1:size(resultCircle.wheelvel,1)
-    wheelvel(i,:) = interp1(resultCircle.time, resultCircle.wheelvel(i,:), time,'spline');
+for i=1:size(resultCircle_raw.wheelvel,1)
+    wheelvel(i,:) = interp1(resultCircle_raw.time, resultCircle_raw.wheelvel(i,:), time,'spline');
 end
 
 filename = 'circletrajectory1122.gif';

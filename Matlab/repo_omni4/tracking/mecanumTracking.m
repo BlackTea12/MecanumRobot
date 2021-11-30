@@ -12,9 +12,9 @@ H = [0 J1/2 0 J1/2;
      0 J1/2 0 J1/2;
      -J1/2 0 -J1/2 0];
 d = 25; %[Nm] 
-lamda1 = 0.028;   %8
-lamda2 = 0.028;   %8
-lamda3 = 0.028;   %8
+lamda1 = 0.5;%5;   %8 %0.028
+lamda2 = 0.5;%5;   %8 %0.028
+lamda3 = 0.5;%5;   %8 %0.028
 lamda = [lamda1 0 0; 0 lamda2 0; 0 0 lamda3];
 N = diag([8*d;8*d;4*d/0.3]);
 %---------------------------------------------------------------------------------%
@@ -46,8 +46,8 @@ robotpathObj.svar = [0;0;0];
 index = 1;
 length = size(pthObj.States,1);
 cnt = 2;
-tau = 0.01; 
-ctr_filter_length = 6;
+tau = 1/6; %0.01 
+ctr_filter_length = 2;
 ctr_filter_pre = zeros(3,ctr_filter_length); % bigger the index, closer to the past data
 
 % start tracking
@@ -85,23 +85,23 @@ while true
     hpsi_mat = h_psi(cur_state.state(3));
     cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
     
-    % low pass filter
-    temp_ctr = (tau*robotpathObj.stateddot(:,cnt-1) + dt*cur_state.state2dot)/(tau+dt);
-    
-    % moving average filter
-    for k=1:ctr_filter_length
-        cur_state.state2dot = cur_state.state2dot + ctr_filter_pre(:,k);
-    end
-    cur_state.state2dot = temp_ctr / (size(ctr_filter_pre,2)+1);
-    
-    for k=0:ctr_filter_length-2
-        ctr_filter_pre(:,ctr_filter_length-k) = ctr_filter_pre(:,ctr_filter_length-1-k);
-    end
-    ctr_filter_pre(:,1) = cur_state.state2dot;
-    
-    
+%     % low pass filter
+%     temp_ctr = (tau*robotpathObj.stateddot(:,cnt-1) + dt*cur_state.state2dot)/(tau+dt);
+%     
+%     % moving average filter
+%     for k=1:ctr_filter_length
+%         cur_state.state2dot = cur_state.state2dot + ctr_filter_pre(:,k);
+%     end
+%     cur_state.state2dot = temp_ctr / (size(ctr_filter_pre,2)+1);
+%     
+%     for k=0:ctr_filter_length-2
+%         ctr_filter_pre(:,ctr_filter_length-k) = ctr_filter_pre(:,ctr_filter_length-1-k);
+%     end
+%     ctr_filter_pre(:,1) = cur_state.state2dot;
+%     
+%     
     % x-y acceleration limit(unfinished)
-    acc_limit = 0.25;    % 0.25
+    acc_limit = 4;%5.3;%0.85;    % 0.25
     indicator_acc = norm(cur_state.state2dot(1:2,1));
     if indicator_acc >= acc_limit
         gain = acc_limit / indicator_acc;
@@ -121,7 +121,17 @@ while true
     robotpathObj.wheeldeg(:,cnt) = robotpathObj.wheeldeg(:,cnt-1)+wheelVel*dt;
     robotpathObj.wheelvel(:,cnt) = wheelVel;
     robotpathObj.svar(:,cnt-1) = s;
-    robotpathObj.errorDist(cnt-1) = sqrt(err.state(1)^2+err.state(2)^2);
+%     robotpathObj.errorDist(cnt-1) = sqrt(err.state(1)^2+err.state(2)^2);
+    
+    % calculation of error distance
+    mindis = 10;
+    for j=1:size(pthObj.States,1)
+        temp = transpose(cur_state.state(1:2))-pthObj.States(j,1:2);
+        if mindis > norm(temp)
+            mindis = norm(temp);
+        end
+    end
+    robotpathObj.errorDist(cnt-1) = mindis;
     
     % data saving
     cur_state.statedot = cur_state.statedot + dt*cur_state.state2dot;
