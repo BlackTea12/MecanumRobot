@@ -179,8 +179,8 @@ plot(radius*sin(t), radius*cos(t),'g','LineWidth',2); % circle trajectory
 % xlim([0 10]); ylim([0 1.4]); % slope trajectory limit
 xlim([-radius-2 radius+2]); ylim([-radius-2 radius+2]); % circle trajectory limit
 cnt = 2;
-w_cut = [2*pi*13];  % (2*pi*f), f=Hz
-ctr_filter_length = 1;
+w_cut = [2*pi*14, 2*pi*13];  % (2*pi*f), f=Hz
+ctr_filter_length = 6;
 ctr_filter_pre = zeros(3,ctr_filter_length); % bigger the index, closer to the past data
 
 
@@ -232,25 +232,25 @@ for i=dt:dt:10
 %     end
 %    ctr_filter_pre(:,1) = cur_state.state2dot;
 
-
+%     % low pass filter, first order
+% %     temp_ctr = (tau*resultCircle_raw.stateddot(:,cnt-1) + dt*cur_state.state2dot)/(tau+dt);
+    temp_ctr = zeros(3,1);
+    for k=1:length(w_cut)
+        temp_ctr = temp_ctr + 1/(1+w_cut(k)*dt)*(w_cut(k)*dt*cur_state.state2dot + resultCircle_raw.stateddot(:,cnt-1));
+    end
+    temp_ctr = temp_ctr/length(w_cut);
+    
+    %temp_ctr = cur_state.state2dot;
     % moving average filter
     for k=1:ctr_filter_length
         cur_state.state2dot = cur_state.state2dot + ctr_filter_pre(:,k);
     end
-    cur_state.state2dot = cur_state.state2dot/ (size(ctr_filter_pre,2)+1);  % maf control output update
+    cur_state.state2dot = (temp_ctr+ cur_state.state2dot)/ (size(ctr_filter_pre,2)+1);
     
     for k=0:ctr_filter_length-2
         ctr_filter_pre(:,ctr_filter_length-k) = ctr_filter_pre(:,ctr_filter_length-1-k);
     end
-   
-    % low pass filter, first order
-    temp_ctr = zeros(3,1);
-    for k=1:length(w_cut)
-        temp_ctr = temp_ctr + 1/(1+w_cut(k)*dt)*(w_cut(k)*dt*cur_state.state2dot + resultCircle_filtered.stateddot(:,cnt-1)); 
-    end
-    temp_ctr = temp_ctr/length(w_cut); % lpf+maf control output update
-    cur_state.state2dot = temp_ctr;
-    ctr_filter_pre(:,1) = cur_state.state2dot;
+   ctr_filter_pre(:,1) = cur_state.state2dot;
     
     % wheel velocity calculation
     wheelVel= getwheelvel(cur_state.state(3), cur_state.statedot);

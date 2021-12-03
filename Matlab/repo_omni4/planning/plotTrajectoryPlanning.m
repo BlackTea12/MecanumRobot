@@ -55,9 +55,9 @@ title('Sliding surface','fontsize',17, 'fontweight','bold'); xlabel('time[sec]',
 xlim([0 robotpathObj.time(end)]); %ylim([0 6]);
 hold off;
 
-figure();
-w_1 = plot(robotpathObj.time, robotpathObj.wheelvel(1,:),'r.','MarkerSize',5); hold on; grid on;
-w_2 = plot(robotpathObj.time, robotpathObj.wheelvel(2,:),'g.','MarkerSize',5);
-w_3 = plot(robotpathObj.time, robotpathObj.wheelvel(3,:),'b.','MarkerSize',5);
-w_4 = plot(robotpathObj.time, robotpathObj.wheelvel(4,:),'k.','MarkerSize',5);
+% figure();
+% w_1 = plot(robotpathObj.time, robotpathObj.wheelvel(1,:),'r.','MarkerSize',5); hold on; grid on;
+% w_2 = plot(robotpathObj.time, robotpathObj.wheelvel(2,:),'g.','MarkerSize',5);
+% w_3 = plot(robotpathObj.time, robotpathObj.wheelvel(3,:),'b.','MarkerSize',5);
+% w_4 = plot(robotpathObj.time, robotpathObj.wheelvel(4,:),'k.','MarkerSize',5);
 end

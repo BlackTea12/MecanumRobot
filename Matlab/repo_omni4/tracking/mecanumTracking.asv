@@ -44,19 +44,19 @@ robotpathObj.wheelvel = [0;0;0;0];
 robotpathObj.svar = [0;0;0];
 
 index = 1;
-pth_length = size(pthObj.States,1);
+length = size(pthObj.States,1);
 cnt = 2;
-w_cut = [2*pi*13,2*pi*10];  % (2*pi*f), f=Hz
-ctr_filter_length = 4;
+w_cut = [2*pi*13];  % (2*pi*f), f=Hz
+ctr_filter_length = 1;
 ctr_filter_pre = zeros(3,ctr_filter_length); % bigger the index, closer to the past data
 
 % start tracking
 while true
     % deciding desired point based on refDisp
-    if index == pth_length
+    if index == length
         des_state.state = transpose(pthObj.States(index,:));
     else
-        for j = index:pth_length
+        for j = index:length
             temp = cur_state.state - transpose(pthObj.States(j,:)); temp(3,1) = 0;
             pos =  norm(temp);
             if pos >= refDisp
@@ -97,11 +97,9 @@ while true
    
     % low pass filter, first order
     temp_ctr = zeros(3,1);
-
     for k=1:length(w_cut)
-        temp_ctr = temp_ctr + 1/(1+w_cut(k)*dt)*(w_cut(k)*dt*cur_state.state2dot + robotpathObj.stateddot(:,cnt-1)); 
+        temp_ctr = temp_ctr + 1/(1+w_cut(k)*dt)*(w_cut(k)*dt*cur_state.state2dot + resultCircle_filtered.stateddot(:,cnt-1)); 
     end
- 
     temp_ctr = temp_ctr/length(w_cut); % lpf+maf control output update
     cur_state.state2dot = temp_ctr;
     ctr_filter_pre(:,1) = cur_state.state2dot;

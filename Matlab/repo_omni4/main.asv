@@ -32,30 +32,29 @@ legend('planned path','smooth path');
 clc;
 % robotpathObj = mecanumTracking(start, goal, pthObj, 1, 0.5);
 % robotpathObj_filtered = mecanumTracking(start, smtObj.States(end,:), smtObj, 0.1, 0.1); %0.24
-% robotpathObj_filtered = mecanumTracking(start, pthObj.States(end,:), pthObj, 0.5, 0.2);
-robotpathObj_filtered1 = mecanumTracking(start, pthObj.States(end,:), pthObj, 0.2, 0.2); %0.24 %3
+robotpathObj_raw = mecanumTracking(start, pthObj.States(end,:), pthObj, 0.5, 0.2); %0.24 %3
 %% plot results
 close all; cla;
 % plotTrajectoryPlanning(map,smtObj,solnInfo, true, start, smtObj.States(end,:),robotpathObj);
-plotTrajectoryPlanning(map,pthObj,solnInfo, true, start, pthObj.States(end,:),robotpathObj_filtered1);
+plotTrajectoryPlanning(map,smtObj,solnInfo, true, start, smtObj.States(end,:),robotpathObj_raw);
 % plotTrajectoryPlanning(map,smtObj,solnInfo, true, start, smtObj.States(end,:),robotpathObj_filtered);
 %%
 % plot(robotpathObj_filtered.state(1,:),robotpathObj_filtered.state(2,:),'g.');
-plot(robotpathObj_filtered1.state(1,:),robotpathObj_filtered1.state(2,:),'g.');
+plot(robotpathObj_raw.state(1,:),robotpathObj_raw.state(2,:),'g.');
 %figure(); hold on;
 %%
 cla;
 % figure(); 
 subplot(1,2,1); 
-plot(robotpathObj_filtered1.time, robotpathObj_filtered1.statedot(1,:),'LineWidth',1.5); grid on; hold on;
-plot(robotpathObj_filtered1.time, robotpathObj_filtered1.statedot(1,:),'LineWidth',1.5);
+plot(robotpathObj_raw.time, robotpathObj_raw.statedot(1,:),'LineWidth',1.5); grid on; hold on;
+plot(robotpathObj_filtered.time, robotpathObj_filtered.statedot(1,:),'LineWidth',1.5);
 legend('SMC','SMC with filter', 'fontsize',14);
 title('X-axis Velocity','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('vel[m/s]','fontsize',15);
 xlim([0 50]); ylim([-3 3]);
 
 subplot(1,2,2);
-plot(robotpathObj_filtered1.time, robotpathObj_filtered1.statedot(2,:),'LineWidth',1.5);grid on; hold on;
-plot(robotpathObj_filtered1.time, robotpathObj_filtered1.statedot(2,:),'LineWidth',1.5);
+plot(robotpathObj_raw.time, robotpathObj_raw.statedot(2,:),'LineWidth',1.5);grid on; hold on;
+plot(robotpathObj_filtered.time, robotpathObj_filtered.statedot(2,:),'LineWidth',1.5);
 legend('SMC','SMC with filter', 'fontsize',14);
 title('Y-axis Velocity','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('vel[m/s]','fontsize',15);
 xlim([0 50]); ylim([-3 3]);
@@ -77,16 +76,16 @@ xlim([0 50]); ylim([-3 3]);
 close all; 
 figure(); 
 subplot(1,2,1); 
-plot(robotpathObj_filtered1.time(1:end-1), robotpathObj_filtered1.errorDist,'--','LineWidth',1.5);hold on; grid on; 
-plot(robotpathObj_filtered1.time(1:end-1), robotpathObj_filtered1.errorDist,'LineWidth',1.5);
+plot(robotpathObj_raw.time(1:end-1), robotpathObj_raw.errorDist,'--','LineWidth',1.5);hold on; grid on; 
+plot(robotpathObj_filtered.time(1:end-1), robotpathObj_filtered.errorDist,'LineWidth',1.5);
 legend('SMC', 'SMC with filter', 'fontsize',14);
 title('Trajectory error','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('e_d[m]','fontsize',15);
 xlim([0 50]); ylim([0 3]);
 hold off;
 
 subplot(1,2,2); 
-plot(robotpathObj_filtered1.time, robotpathObj_filtered1.wheelvel(1,:),'--','LineWidth',1.5);hold on; grid on; 
-plot(robotpathObj_filtered1.time, robotpathObj_filtered1.wheelvel(1,:),'LineWidth',1.5);
+plot(robotpathObj_raw.time, robotpathObj_raw.wheelvel(1,:),'--','LineWidth',1.5);hold on; grid on; 
+plot(robotpathObj_filtered.time, robotpathObj_filtered.wheelvel(1,:),'LineWidth',1.5);
 legend('SMC', 'SMC with filter', 'fontsize',14);
 title('First wheel velocity','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('vel[deg/sec]','fontsize',15);
 xlim([0 50]); ylim([-100 150]);
