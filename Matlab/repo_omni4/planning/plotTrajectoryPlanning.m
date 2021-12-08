@@ -16,7 +16,7 @@ plot(robotpathObj.time, robotpathObj.stateddot(1,:),'LineWidth',1.5); grid on; h
 plot(robotpathObj.time, robotpathObj.stateddot(2,:),'--','LineWidth',1.5);
 legend('x axis', 'y axis','fontsize',14); 
 title('Acceleration','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('acc[m/s^2]','fontsize',15);
-xlim([0 robotpathObj.time(end)]); ylim([-10 10]);
+xlim([0 robotpathObj.time(end)]); ylim([-0.5 0.5]);
 hold off;
 
 subplot(2,2,2); % velocity
@@ -24,7 +24,7 @@ plot(robotpathObj.time, robotpathObj.statedot(1,:),'LineWidth',1.5); grid on; ho
 plot(robotpathObj.time, robotpathObj.statedot(2,:),'--','LineWidth',1.5);
 legend('x axis', 'y axis', 'fontsize',14);
 title('Velocity','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('vel[m/s]','fontsize',15);
-xlim([0 robotpathObj.time(end)]); ylim([-5 5]);
+xlim([0 robotpathObj.time(end)]); ylim([-1.3 1.3]);
 hold off;
 
 subplot(2,2,3); % final acceleration 
@@ -33,7 +33,7 @@ for i = 1:size(robotpathObj.time,2)
 end
 plot(robotpathObj.time, acc_result,'b'); grid on;
 title('Acceleration Vector Norm','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('acc[m/s^2]','fontsize',15);
-xlim([0 robotpathObj.time(end)]); ylim([-1 4]);
+xlim([0 robotpathObj.time(end)]); ylim([0 0.5]);
 % legend('x axis', 'y axis','fontsize',14);
 
 
@@ -44,7 +44,7 @@ end
 % legend('x axis', 'y axis', 'fontsize',14);
 plot(robotpathObj.time, acc_result,'b'); grid on;
 title('Velocity Vector Norm','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('vel[m/s]','fontsize',15);
-xlim([0 robotpathObj.time(end)]); ylim([0 6]);
+xlim([0 robotpathObj.time(end)]); ylim([0 1.3]);
 hold off;
 
 figure();
@@ -52,6 +52,12 @@ plot(robotpathObj.time(1:end-1), robotpathObj.svar(1,:)); hold on; grid on;
 plot(robotpathObj.time(1:end-1), robotpathObj.svar(2,:));
 plot(robotpathObj.time(1:end-1), robotpathObj.svar(3,:));
 title('Sliding surface','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('s','fontsize',15);
+xlim([0 robotpathObj.time(end)]); %ylim([0 6]);
+hold off;
+
+figure();
+plot(robotpathObj.time, 180/pi*robotpathObj.state(3,:)); grid on;
+title('Yaw angle','fontsize',17, 'fontweight','bold'); xlabel('time[sec]','fontsize',15); ylabel('yaw angle [deg/s]','fontsize',15);
 xlim([0 robotpathObj.time(end)]); %ylim([0 6]);
 hold off;
 

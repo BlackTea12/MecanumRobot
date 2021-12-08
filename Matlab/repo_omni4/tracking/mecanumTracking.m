@@ -46,22 +46,22 @@ robotpathObj.svar = [0;0;0];
 index = 1;
 pth_length = size(pthObj.States,1);
 cnt = 2;
-w_cut = [2*pi*13,2*pi*10];  % (2*pi*f), f=Hz
-ctr_filter_length = 4;
+w_cut = [2*pi*13,2*pi*12];  % (2*pi*f), f=Hz
+ctr_filter_length = 5;
 ctr_filter_pre = zeros(3,ctr_filter_length); % bigger the index, closer to the past data
 
 % start tracking
 while true
     % deciding desired point based on refDisp
     if index == pth_length
-        des_state.state = transpose(pthObj.States(index,:));
+        des_state.state = transpose(pthObj.States(index,:)); des_state.state(3,1) = 0;
     else
         for j = index:pth_length
             temp = cur_state.state - transpose(pthObj.States(j,:)); temp(3,1) = 0;
             pos =  norm(temp);
             if pos >= refDisp
                 index = j;
-                des_state.state = transpose(pthObj.States(j,:));
+                des_state.state = transpose(pthObj.States(j,:)); des_state.state(3,1) = 0;
                 break;
             end
         end
@@ -79,41 +79,41 @@ while true
     hpsi_inv_mat = hpsi_inv(cur_state.state(3));   
 
     % final control input
-    ctr_in = hpsi_inv_mat*(4*J1/R*(Qr2dot+lamda*errdot)+N*sign(s));
+    ctr_in = hpsi_inv_mat*(4*J1/R*(Qr2dot+lamda*errdot)+N*phaseSign(s));
     
     % ctr input to plant model
     hpsi_mat = h_psi(cur_state.state(3));
     cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
     
     % moving average filter
-    for k=1:ctr_filter_length
-        cur_state.state2dot = cur_state.state2dot + ctr_filter_pre(:,k);
-    end
-    cur_state.state2dot = cur_state.state2dot/ (size(ctr_filter_pre,2)+1);  % maf control output update
-    
-    for k=0:ctr_filter_length-2
-        ctr_filter_pre(:,ctr_filter_length-k) = ctr_filter_pre(:,ctr_filter_length-1-k);
-    end
-   
-    % low pass filter, first order
-    temp_ctr = zeros(3,1);
-
-    for k=1:length(w_cut)
-        temp_ctr = temp_ctr + 1/(1+w_cut(k)*dt)*(w_cut(k)*dt*cur_state.state2dot + robotpathObj.stateddot(:,cnt-1)); 
-    end
- 
-    temp_ctr = temp_ctr/length(w_cut); % lpf+maf control output update
-    cur_state.state2dot = temp_ctr;
-    ctr_filter_pre(:,1) = cur_state.state2dot;
+%     for k=1:ctr_filter_length
+%         cur_state.state2dot = cur_state.state2dot + ctr_filter_pre(:,k);
+%     end
+%     cur_state.state2dot = cur_state.state2dot/ (size(ctr_filter_pre,2)+1);  % maf control output update
+%     
+%     for k=0:ctr_filter_length-2
+%         ctr_filter_pre(:,ctr_filter_length-k) = ctr_filter_pre(:,ctr_filter_length-1-k);
+%     end
+%    
+%     % low pass filter, first order
+%     temp_ctr = zeros(3,1);
+% 
+%     for k=1:length(w_cut)
+%         temp_ctr = temp_ctr + 1/(1+w_cut(k)*dt)*(w_cut(k)*dt*cur_state.state2dot + robotpathObj.stateddot(:,cnt-1)); 
+%     end
+%  
+%     temp_ctr = temp_ctr/length(w_cut); % lpf+maf control output update
+%     cur_state.state2dot = temp_ctr;
    
     % x-y acceleration limit(unfinished)
-    acc_limit = 4;%5.3;%0.85;    % 0.25
+    acc_limit = 0.3;%5.3;%0.85;    % 0.25
     indicator_acc = norm(cur_state.state2dot(1:2,1));
     if indicator_acc >= acc_limit
         gain = acc_limit / indicator_acc;
-        ctr_in = ctr_in*gain;
-        cur_state.state2dot = R/(4*J1) * hpsi_mat * ctr_in;
+        cur_state.state2dot = gain * cur_state.state2dot;
     end
+    
+    ctr_filter_pre(:,1) = cur_state.state2dot;
     
     % wheel velocity calculation
     wheelVel= getwheelvel(cur_state.state(3), cur_state.statedot);
@@ -156,4 +156,15 @@ while true
     cnt = cnt+1;
 end
 disp("Tracking Finished!");
+end
+
+% sign function to continus phase delay
+function p_sign = phaseSign(s)
+phase = 1;
+
+if abs(s) > phase
+    p_sign = sign(s);
+else
+    p_sign = s/phase;
+end
 end
